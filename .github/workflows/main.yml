@@ -28,12 +28,12 @@ jobs:
       # Step 3: Build Docker Image dari Dockerfile
       - name: Build Docker Image
         run: |
-          docker build -t ghcr.io/${{ github.actor }}/${{ github.repository }}:latest .
+          docker build -t ghcr.io/mrngrh/devops:latest .
 
       # Step 4: Push Docker Image ke GHCR
       - name: Push Docker Image
         run: |
-          docker push ghcr.io/${{ github.actor }}/${{ github.repository }}:latest
+          docker push ghcr.io/mrngrh/devops:latest
 
   # Job kedua: Deploy ke server setelah build dan push berhasil
   deploy:
@@ -53,7 +53,7 @@ jobs:
 
           # Script yang dijalankan di server remote
           script: |
-            cd /home/ubuntu/resto  # Pindah ke direktori project
-            docker compose pull  # Tarik image terbaru dari GHCR
-            docker compose down  # Hentikan dan hapus container yang berjalan
+            docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} -p ${{ secrets.GHCR }}
+            cd /home/ubuntu/resto  # Pindah ke direktori project            
+            docker compose down  # Hentikan container yang berjalan
             docker compose up -d --build  # Jalankan container terbaru di background
