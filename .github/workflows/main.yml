@@ -55,5 +55,6 @@ jobs:
           script: |
             docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} -p ${{ secrets.GHCR }}
             cd /home/ubuntu/resto  # Pindah ke direktori project            
+            docker compose pull # Tarik image terbaru
             docker compose down  # Hentikan container yang berjalan
             docker compose up -d --build  # Jalankan container terbaru di background
