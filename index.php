@@ -5,7 +5,7 @@ if (file_exists('setup_completed.flag')) {
 } else {
     define('DB_HOST', getenv('MYSQL_HOST') ?: 'localhost');
     define('DB_USER', getenv('MYSQL_USER') ?: 'root');
-    define('DB_PASS', getenv('MYSQL_PASSWORD') ?: '');    
+    define('DB_PASS', getenv('MYSQL_PASSWORD') ?: 'devops');    
 
     // Create Connection
     $link = new mysqli(DB_HOST, DB_USER, DB_PASS);
@@ -41,7 +41,7 @@ if (file_exists('setup_completed.flag')) {
     }
 
     // Execute SQL statements from "restaurantdb.txt"
-    executeSQLFromFile('restaurantdb.txt', $link);
+    executeSQLFromFile('restaurantDB.txt', $link);
 
     // Close the database connection
     $link->close();
