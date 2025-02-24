@@ -1,0 +1,59 @@
+name: CI/CD
+
+# Event trigger: Pipeline berjalan saat ada push ke branch main
+on:
+  push:
+    branches:
+      - main  # Jalankan pipeline saat ada push ke branch main
+
+jobs:
+  # Job pertama: Build dan Push Docker Image ke GHCR
+  build-push:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest  # Menjalankan job di runner Ubuntu terbaru
+
+    steps:
+      # Step 1: Checkout kode dari repository GitHub
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Login ke GitHub Container Registry (GHCR)
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io  # GHCR sebagai registry
+          username: ${{ github.actor }}  # Username GitHub yang menjalankan pipeline
+          password: ${{ secrets.GHCR }}  # Token GHCR yang disimpan di GitHub Secrets
+
+      # Step 3: Build Docker Image dari Dockerfile
+      - name: Build Docker Image
+        run: |
+          docker build -t ghcr.io/${{ github.actor }}/${{ github.repository }}:latest .
+
+      # Step 4: Push Docker Image ke GHCR
+      - name: Push Docker Image
+        run: |
+          docker push ghcr.io/${{ github.actor }}/${{ github.repository }}:latest
+
+  # Job kedua: Deploy ke server setelah build dan push berhasil
+  deploy:
+    name: Deploy to Remote Server
+    runs-on: ubuntu-latest
+    needs: build-push  # Menunggu job build-push selesai sebelum menjalankan deploy
+
+    steps:
+      # Step 1: SSH ke server dan jalankan perintah deploy
+      - name: Deploy with SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 158.140.185.17  # IP server tujuan
+          username: ${{ secrets.SSH_USER }}  # Username SSH dari GitHub Secrets
+          key: ${{ secrets.SSH_KEY }}  # SSH private key dari GitHub Secrets
+          port: 121  # Port SSH kustom
+
+          # Script yang dijalankan di server remote
+          script: |
+            cd /home/ubuntu/resto  # Pindah ke direktori project
+            docker-compose pull  # Tarik image terbaru dari GHCR
+            docker-compose down  # Hentikan dan hapus container yang berjalan
+            docker-compose up -d --build  # Jalankan container terbaru di background
