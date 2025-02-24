@@ -13,12 +13,20 @@ RUN docker-php-ext-install mysqli pdo pdo_mysql
 # Aktifkan modul mod_rewrite di Apache untuk dukungan URL rewriting.
 RUN a2enmod rewrite
 
+# Ubah konfigurasi Apache agar mengizinkan .htaccess
+RUN echo "<Directory /var/www/html/> \
+    AllowOverride All \
+    Require all granted \
+</Directory>" > /etc/apache2/conf-available/allow-override.conf \
+    && a2enconf allow-override
+
 # Salin file .htaccess ke direktori kerja untuk konfigurasi Apache.
 COPY .htaccess /var/www/html/.htaccess
 
 # Set hak kepemilikan ke user www-data dan izin akses ke file/direktori.
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
+    && find /var/www/html -type d -exec chmod 755 {} \; \
+    && find /var/www/html -type f -exec chmod 644 {} \;
 
 # Buka port 80 agar aplikasi bisa diakses dari luar container.
 EXPOSE 80
